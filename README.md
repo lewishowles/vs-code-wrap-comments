@@ -2,11 +2,31 @@
 
 Comments look better, to me, wrapped at 80 characters. This plugin re-flows a comment to do just that, so you don’t have to think about it.
 
-When activated on a comment block, it extends the selection to include the entire comment, excluding any @param or @return lines, and then re-flows the resulting lines.
+When activated on a comment block, it extends the selection to include the entire comment and re-flows the resulting lines.
 
-The plugin currently works with single-line style (`//`) and multi-line style (` * `) Javascript comments, and bash comments (`#`).
+The plugin currently works with single-line style (`//`) and multi-line style (` * `) Javascript comments, and bash comments (`#`). JavaScript comments automatically exclude JSDoc annotations (`@param`, `@return`) and closing delimiters (`*/`). Bash comments have no exclusions.
 
 Any gaps in the comment—that is, lines that contain just a comment marker and no text—are treated as paragraph delimiters, and each paragraph is wrapped separately.
+
+## Language Configuration
+
+Comment wrapping is language-aware. Each language specifies its own markers and exclusion patterns:
+
+- **JavaScript** (javascript, javascriptreact, typescript, typescriptreact): Markers `//` and `*`, excludes JSDoc annotations
+- **Bash** (shell, sh, zsh, properties, ignore, dotenv): Marker `#`, no exclusions
+- **Fallback**: For unknown languages, all markers (`//`, `*`, `#`) are supported with no exclusions
+
+To add support for a new language, modify `languageConfiguration` in `src/wrap-comment.js`:
+
+```javascript
+const languageConfiguration = {
+	python: {
+		languages: ["python"],
+		markers: ["#"],
+		exclusions: []
+	}
+};
+```
 
 ## Examples
 
