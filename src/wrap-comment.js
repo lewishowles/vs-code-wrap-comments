@@ -1,5 +1,45 @@
 const vscode = require("vscode");
 
+// Language-specific comment configuration
+const languageConfiguration = {
+	javascript: {
+		languages: ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+		markers: ["//", "*"],
+		exclusions: ["@param", "@return", "*/"],
+	},
+	bash: {
+		languages: ["shell", "shellscript", "bash", "sh", "zsh", "properties", "ignore", "dotenv"],
+		markers: ["#"],
+		exclusions: [],
+	},
+};
+
+/**
+ * Get the comment configuration for a given document.
+ */
+function getLanguageConfig(document) {
+	const languageId = document.languageId;
+
+	for (const config of Object.values(languageConfiguration)) {
+		if (config.languages.includes(languageId)) {
+			return config;
+		}
+	}
+
+	return {
+		languages: [],
+		markers: ["//", "*", "#"],
+		exclusions: [],
+	};
+}
+
+/**
+ * Escape special regex characters in a string.
+ */
+function escapeRegex(text) {
+	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 module.exports = function() {
 	const editor = vscode.window.activeTextEditor;
 
@@ -10,8 +50,9 @@ module.exports = function() {
 	const document = editor.document;
 	const selection = editor.selection;
 	const cursorPosition = selection.active;
+	const config = getLanguageConfig(document);
 	// Expand the selection to encompass the current comment.
-	const commentRange = getCommentRange(document, cursorPosition);
+	const commentRange = getCommentRange(document, cursorPosition, config);
 
 	if (!commentRange) {
 		vscode.window.showInformationMessage("Please place the cursor in a comment.");
@@ -21,7 +62,7 @@ module.exports = function() {
 
 	// Re-wrap our comment as necessary.
 	const commentText = document.getText(commentRange);
-	const wrappedText = wrapCommentText(commentText, 80);
+	const wrappedText = wrapCommentText(commentText, 80, config);
 
 	editor.edit(editBuilder => {
 		editBuilder.replace(commentRange, wrappedText);
@@ -35,12 +76,14 @@ module.exports = function() {
  *     The current document.
  * @param  {object}  cursorPosition
  *     The current cursor position.
+ * @param  {object}  config
+ *     The language configuration.
  */
-function getCommentRange(document, cursorPosition) {
+function getCommentRange(document, cursorPosition, config) {
 	const currentLine = document.lineAt(cursorPosition.line);
 	const currentLineText = currentLine.text;
 
-	if (!isComment(currentLineText)) {
+	if (!isComment(currentLineText, config)) {
 		return null;
 	}
 
@@ -49,11 +92,11 @@ function getCommentRange(document, cursorPosition) {
 	let startLine = cursorPosition.line;
 	let endLine = cursorPosition.line;
 
-	while (startLine > 0 && isComment(document.lineAt(startLine - 1).text)) {
+	while (startLine > 0 && isComment(document.lineAt(startLine - 1).text, config)) {
 		startLine--;
 	}
 
-	while (endLine < document.lineCount - 1 && isComment(document.lineAt(endLine + 1).text)) {
+	while (endLine < document.lineCount - 1 && isComment(document.lineAt(endLine + 1).text, config)) {
 		endLine++;
 	}
 
@@ -66,15 +109,17 @@ function getCommentRange(document, cursorPosition) {
  *
  * @param  {string}  text
  *     The text to check.
+ * @param  {object}  config
+ *     The language configuration.
  */
-function isComment(text) {
+function isComment(text, config) {
 	const trimmedText = text.trim();
-	const prefixes = ["//", "*", "#"];
 
-	return prefixes.some(prefix => trimmedText.startsWith(prefix)) &&
-		!text.includes("@param") &&
-		!text.includes("@return") &&
-		!text.includes("*/");
+	if (!config.markers.some(marker => trimmedText.startsWith(marker))) {
+		return false;
+	}
+
+	return !config.exclusions.some(exclusion => text.includes(exclusion));
 }
 
 /**
@@ -88,8 +133,10 @@ function isComment(text) {
  *     The text to wrap.
  * @param  {int}  maxLength
  *     The line-length to wrap the comment to.
+ * @param  {object}  config
+ *     The language configuration.
  */
-function wrapCommentText(text, maxLength) {
+function wrapCommentText(text, maxLength, config) {
 	const textLines = text.split("\n");
 	// Our newly wrapped lines.
 	const wrappedLines = [];
@@ -102,9 +149,9 @@ function wrapCommentText(text, maxLength) {
 
 		// If this is an empty line, we start a new paragraph by wrapping any
 		// existing paragraph.
-		if (["//", "*", "#"].includes(trimmedLine)) {
+		if (config.markers.includes(trimmedLine)) {
 			if (currentParagraph.length > 0) {
-				wrappedLines.push(...wrapParagraph(currentParagraph, maxLength));
+				wrappedLines.push(...wrapParagraph(currentParagraph, maxLength, config));
 			}
 
 			// Preserve the empty line.
@@ -118,7 +165,7 @@ function wrapCommentText(text, maxLength) {
 	});
 
 	if (currentParagraph.length > 0) {
-		wrappedLines.push(...wrapParagraph(currentParagraph, maxLength));
+		wrappedLines.push(...wrapParagraph(currentParagraph, maxLength, config));
 	}
 
 	return wrappedLines.join("\n");
@@ -131,11 +178,13 @@ function wrapCommentText(text, maxLength) {
  *     The text lines to wrap.
  * @param  {integer}  width
  *     The line-length to wrap to.
+ * @param  {object}  config
+ *     The language configuration.
  */
-function wrapParagraph(lines, width) {
+function wrapParagraph(lines, width, config) {
 	// Our comment marker for this comment. This includes any leading
 	// whitespace, so we don't need to account for it separately.
-	const commentMarker = getCommentMarker(lines[0]);
+	const commentMarker = getCommentMarker(lines[0], config);
 
 	// If we can't find a comment marker, we can't continue.
 	if (!commentMarker) {
@@ -181,14 +230,19 @@ function wrapParagraph(lines, width) {
 }
 
 /**
- * Given a string of text, determine the starting comment marker, one of "//" or
- * "*" with optional leading space.
+ * Given a string of text, determine the starting comment marker with optional leading space.
  *
  * @param  {string}  text
  *     The text to test.
+ * @param  {object}  config
+ *     The language configuration.
  */
-function getCommentMarker(text) {
-	const patterns = [/^\s*\/\//, /^\s*\*/, /^\s*#/];
+function getCommentMarker(text, config) {
+	const patterns = config.markers.map(marker => {
+		const escaped = escapeRegex(marker);
+
+		return new RegExp(`^\\s*${escaped}`);
+	});
 
 	for (const pattern of patterns) {
 		const match = text.match(pattern);
