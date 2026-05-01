@@ -6,15 +6,31 @@ module.exports = [
 	{
 		ignores: ["**/dist/*"],
 	},
+
+	pluginJs.configs.recommended,
+
+	// Default: CommonJS (VS Code extension + utilities)
 	{
-		files: ["**/*.{js,vue}"],
-	},
-	{
+		files: ["**/*.js", "**/*.mjs"],
 		languageOptions: {
-			globals: globals.browser,
 			sourceType: "commonjs",
+			globals: {
+				...globals.node,
+				...globals.browser,
+			},
 		},
 	},
-	pluginJs.configs.recommended,
+
+	// Tests: ESM (Vitest)
+	{
+		files: ["**/*.test.js"],
+		languageOptions: {
+			sourceType: "module",
+			globals: {
+				...globals.node,
+			},
+		},
+	},
+
 	stylistic,
 ];
