@@ -17,7 +17,16 @@
 				"command": "wrap-comments.wrapComment",
 				"title": "Wrap comment"
 			}
-		]
+		],
+		"configuration": {
+			"properties": {
+				"wrapComments.lineLength": {
+					"type": "number",
+					"default": 80,
+					"description": "Line length to wrap comments to"
+				}
+			}
+		}
 	},
 	"engines": {
 		"vscode": "^1.92.0"

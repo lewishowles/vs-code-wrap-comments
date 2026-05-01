@@ -16,6 +16,9 @@ const languageConfiguration = {
 
 /**
  * Get the comment configuration for a given document.
+ *
+ * @param  {object}  document
+ *     The current document.
  */
 function getLanguageConfig(document) {
 	const languageId = document.languageId;
@@ -35,9 +38,33 @@ function getLanguageConfig(document) {
 
 /**
  * Escape special regex characters in a string.
+ *
+ * @param  {string}  text
+ *     The text to escape.
  */
 function escapeRegex(text) {
 	return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Get the configured line length for wrapping comments.
+ */
+function getLineLength() {
+	const wrapCommentsConfig = vscode.workspace.getConfiguration("wrapComments");
+	const customLineLength = wrapCommentsConfig.get("lineLength");
+
+	if (typeof customLineLength === "number") {
+		return customLineLength;
+	}
+
+	const editorConfig = vscode.workspace.getConfiguration("editor");
+	const wordWrapColumn = editorConfig.get("wordWrapColumn");
+
+	if (typeof wordWrapColumn === "number") {
+		return wordWrapColumn;
+	}
+
+	return 80;
 }
 
 module.exports = function() {
@@ -62,7 +89,8 @@ module.exports = function() {
 
 	// Re-wrap our comment as necessary.
 	const commentText = document.getText(commentRange);
-	const wrappedText = wrapCommentText(commentText, 80, config);
+	const lineLength = getLineLength();
+	const wrappedText = wrapCommentText(commentText, lineLength, config);
 
 	editor.edit(editBuilder => {
 		editBuilder.replace(commentRange, wrappedText);
@@ -257,6 +285,9 @@ function getCommentMarker(text, config) {
 
 /**
  * Determine the length of the given text, accounting for "Tab Size" settings.
+ *
+ * @param  {string}  text
+ *     The text to measure.
  */
 function calculateLength(text) {
 	if (typeof text !== "string") {

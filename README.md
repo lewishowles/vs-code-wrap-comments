@@ -28,6 +28,20 @@ const languageConfiguration = {
 };
 ```
 
+## Settings
+
+Configure wrapping behaviour via VS Code settings:
+
+- **`wrapComments.lineLength`** (number, default: `80`) — Line length to wrap comments to. Falls back to `editor.wordWrapColumn` if not set, then to 80.
+
+Example in `.vscode/settings.json`:
+
+```json
+{
+	"wrapComments.lineLength": 100
+}
+```
+
 ## Examples
 
 ## A long, single-line comment
