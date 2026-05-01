@@ -4,7 +4,7 @@ Comments look better, to me, wrapped at 80 characters. This plugin re-flows a co
 
 When activated on a comment block, it extends the selection to include the entire comment, excluding any @param or @return lines, and then re-flows the resulting lines.
 
-The plugin currently works with single-line style (`//`) and multi-line style (` * `) Javascript comments.
+The plugin currently works with single-line style (`//`) and multi-line style (` * `) Javascript comments, and bash comments (`#`).
 
 Any gaps in the comment—that is, lines that contain just a comment marker and no text—are treated as paragraph delimiters, and each paragraph is wrapped separately.
 
@@ -65,5 +65,5 @@ This will generate a `.vsix` file in the repository root.
 
 1. Open VSCode.
 1. **Go to the Extensions view** by clicking the **Extensions** icon in the Activity Bar on the side of the window
-1. **Click on the three** dots in the top right corner of the Extensions view and select `Install from VSIX...`
+1. **Click on the three dots** in the top right corner of the Extensions view and select `Install from VSIX...`
 1. **Navigate to the `.vsix`** file you created and select it.

@@ -69,7 +69,7 @@ function getCommentRange(document, cursorPosition) {
  */
 function isComment(text) {
 	const trimmedText = text.trim();
-	const prefixes = ["//", "*"];
+	const prefixes = ["//", "*", "#"];
 
 	return prefixes.some(prefix => trimmedText.startsWith(prefix)) &&
 		!text.includes("@param") &&
@@ -102,7 +102,7 @@ function wrapCommentText(text, maxLength) {
 
 		// If this is an empty line, we start a new paragraph by wrapping any
 		// existing paragraph.
-		if (["//", "*"].includes(trimmedLine)) {
+		if (["//", "*", "#"].includes(trimmedLine)) {
 			if (currentParagraph.length > 0) {
 				wrappedLines.push(...wrapParagraph(currentParagraph, maxLength));
 			}
@@ -188,7 +188,7 @@ function wrapParagraph(lines, width) {
  *     The text to test.
  */
 function getCommentMarker(text) {
-	const patterns = [/^\s*\/\//, /^\s*\*/];
+	const patterns = [/^\s*\/\//, /^\s*\*/, /^\s*#/];
 
 	for (const pattern of patterns) {
 		const match = text.match(pattern);
