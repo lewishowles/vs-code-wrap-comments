@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 - 2026-05-18
+
+### Fixes
+
+- Fix an issue where Javascript comment block end tags (*/) were being incorrectly wrapped.
+
 ## 0.2.0 - 2026-05-01
 
 ### Features

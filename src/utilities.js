@@ -28,7 +28,7 @@ function getLanguageConfigForId(languageId) {
 	return {
 		languages: [],
 		markers: ["//", "*", "#"],
-		exclusions: [],
+		exclusions: ["@param", "@return", "*/"],
 	};
 }
 
@@ -113,6 +113,20 @@ function wrapCommentText(text, maxLength, config, calculateLengthFunction) {
 	textLines.forEach(line => {
 		const trimmedLine = line.trim();
 
+		// Some lines are excluded from wrapping, such as JSDoc blocks and
+		// "end-comment" markers.
+		if (config.exclusions.some(exclusion => line.includes(exclusion))) {
+			if (currentParagraph.length > 0) {
+				wrappedLines.push(...wrapParagraph(currentParagraph, maxLength, config, calculateLengthFunction));
+			}
+
+			wrappedLines.push(line);
+
+			currentParagraph = [];
+
+			return;
+		}
+
 		// If this is an empty line, we start a new paragraph by wrapping any
 		// existing paragraph.
 		if (config.markers.includes(trimmedLine)) {
@@ -124,6 +138,8 @@ function wrapCommentText(text, maxLength, config, calculateLengthFunction) {
 			wrappedLines.push(line);
 
 			currentParagraph = [];
+
+			return;
 		}
 
 		// Add our new line to the current paragraph.

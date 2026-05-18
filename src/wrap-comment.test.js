@@ -60,7 +60,7 @@ describe("getLanguageConfigForId", () => {
 		expect(config.markers).toContain("//");
 		expect(config.markers).toContain("*");
 		expect(config.markers).toContain("#");
-		expect(config.exclusions).toHaveLength(0);
+		expect(config.exclusions).toContain("*/");
 	});
 });
 
@@ -174,6 +174,48 @@ describe("wrapCommentText", () => {
 		const result = wrapCommentText(input, 80, jsConfig, mockCalculateLength);
 
 		expect(result).toBe(input);
+	});
+
+	it("preserves a JavaScript block comment closing marker", () => {
+		const blockCommentConfig = {
+			languages: ["javascript"],
+			markers: ["//", "*"],
+			exclusions: ["@param", "@return", "*/"],
+		};
+		const input = [
+			"\t * Whether the dialog should open itself immediately. This is true by",
+			"\t * default for use with `modal-controller`, but will likely need to be set",
+			"\t * to false if used directly.",
+			"\t */",
+		].join("\n");
+		const expected = [
+			"\t * Whether the dialog should open itself immediately. This is true by default",
+			"\t * for use with `modal-controller`, but will likely need to be set to false if",
+			"\t * used directly.",
+			"\t */",
+		].join("\n");
+		const result = wrapCommentText(input, 80, blockCommentConfig, mockCalculateLength);
+
+		expect(result).toBe(expected);
+	});
+
+	it("preserves a block comment closing marker for fallback languages", () => {
+		const fallbackConfig = getLanguageConfigForId("unknown");
+		const input = [
+			"\t * Whether the dialog should open itself immediately. This is true by",
+			"\t * default for use with `modal-controller`, but will likely need to be set",
+			"\t * to false if used directly.",
+			"\t */",
+		].join("\n");
+		const expected = [
+			"\t * Whether the dialog should open itself immediately. This is true by default",
+			"\t * for use with `modal-controller`, but will likely need to be set to false if",
+			"\t * used directly.",
+			"\t */",
+		].join("\n");
+		const result = wrapCommentText(input, 80, fallbackConfig, mockCalculateLength);
+
+		expect(result).toBe(expected);
 	});
 });
 

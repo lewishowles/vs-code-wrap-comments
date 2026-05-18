@@ -1,0 +1,14 @@
+.DS_Store
+.agents/**
+.claude/**
+.git/**
+.gitignore
+.npmrc
+.vscode/**
+AGENTS.md
+config/**
+eslint.config.cjs
+node_modules/**
+package-lock.json
+src/**/*.test.js
+wrap-comments-*.vsix
