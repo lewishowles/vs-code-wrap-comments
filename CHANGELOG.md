@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.0.1 - 2024-08-14
+## 0.2.0 - 2026-05-01
+
+### Features
+
+- Add support for Bash comments
+- Add new `wrapComments.lineLength` preference.
+
+## 0.1.0 - 2024-08-14
 
 The initial version of the plugin wraps comments to 80 characters in length.
 
